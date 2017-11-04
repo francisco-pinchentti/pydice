@@ -4,72 +4,87 @@ def mean(numbers):
     return float(sum(numbers)) / max(len(numbers), 1)
 
 class Dice:
-    
+
     def __init__(self, sides):
         self.history = []
         self.sides = sides
-        
+
     def roll(self):
         result = random.randint(1, self.sides)
         self.history.append(result)
         return result
-    
+
     def description(self):
         return 'd'+str(self.sides)
-    
+
     def avg(self):
         return mean(self.history)
-    
+
     def last(self):
         return self.history[len(self.history)-1]
 
 class DiceBag(object):
-    
+
     def __init__(self, dices):
         self.history = []
         self.dices = dices
-    
+
     def roll(self):
-        history = []
+        _history = []
         result = 0
         for dice in self.dices:
             result += dice.roll()
-            history.append(
+            _history.append(
                 {'description':dice.description(), 'result': dice.last()}
             )
-        self.history.append({ 'result' : result, 'history': history })
+        self.history.append({ 'result' : result, 'history': _history })
         return result
-    
+
     def avg(self):
         return mean([roll['result'] for roll in self.history])
 
     def get_last_history(self):
         return self.history[len(self.history)-1]
 
-class SignedDiceBag(DiceBag):
+    # todo get highs/lows
+    def get_last_hightest(n):
+        ''' Returns hightest n results from last history entry '''
+        pass
 
-    def __init__(self, dices, is_negative):
-        super(SignedDiceBag, self).__init__(dices)
+class DiceExprTerm(object):
+    '''
+    This class represents a dice set -or bag- and associated modifiers
+    like negative term, keep n highest rolls or drop n lower rolls
+    '''
+    def __init__(self, dice_bag, is_negative, keep_highest_n=None, drop_lowest_n=None):
+        self.dice_bag = dice_bag
         self.is_negative = is_negative
+        self.keep_highest_n = keep_highest_n
+        self.drop_lowest_n = drop_lowest_n
 
     def roll(self):
-        roll = super(SignedDiceBag, self).roll()
+        roll = self.dice_bag.roll()
+        # todo get highs/lows
         return -roll if self.is_negative else roll
 
 class NamedDiceCollection:
-
-    def __init__(self, name = '', constant = 0, dice_bags = []):
+    '''
+    This class holds a collection of dice expression terms and
+    other associated attributes -like name or constant modifiers-
+    '''
+    def __init__(self, name = '', constant = 0, dice_terms_exprs = []):
         self.history = []
-        self.dice_bags = dice_bags
+        self.dice_terms_exprs = dice_terms_exprs
         self.name = name
         self.constant = constant
-    
+
     def roll(self):
         result = self.constant
         _history_entries = []
-        for dice_bag in self.dice_bags:
-            result += dice_bag.roll()
-            _history_entries.append(dice_bag.get_last_history())
+        for det in self.dice_terms_exprs:
+            result += det.roll()
+            # consider using a det level history
+            _history_entries.append(det.dice_bag.get_last_history())
         self.history.append({
             'result': result,
             'history': _history_entries

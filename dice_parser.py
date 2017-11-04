@@ -1,5 +1,5 @@
 import re
-from dice_classes import NamedDiceCollection, SignedDiceBag, Dice
+from dice_classes import NamedDiceCollection, DiceExprTerm, DiceBag, Dice
 
 def check_string_format(a_string):
     terms = re.split('[+-]', a_string)
@@ -42,20 +42,22 @@ def get_dices_terms(a_string):
         })
     return terms
 
-def build_signed_dice_bag(ammount, sides, is_negative):
-    dices = []
-    for i in range(0, ammount):
-        dices.append(Dice(sides))
-    return SignedDiceBag(dices, is_negative)
-
-def build_signed_dice_bags(expression):
-    signed_dice_bags = []
+def build_dice_expr_terms(expression):
+    l = []
     for dice_term in get_dices_terms(expression):
-        dice_bag = build_signed_dice_bag(int(dice_term['ammount']), int(dice_term['sides']), dice_term['is_negative'])
-        signed_dice_bags.append( dice_bag )
-    return signed_dice_bags
+        ammount = int(dice_term['ammount'])
+        sides = int(dice_term['sides'])
+        is_negative = dice_term['is_negative']
+        #keep_highest_n = dice_term['keep_highest_n']
+        #drop_lowest_n = dice_term['drop_lowest_n']
+        dices = []
+        for i in range(0, ammount):
+            dices.append(Dice(sides))
+        l.append(DiceExprTerm(DiceBag(dices), is_negative))
+    return l
 
 def build_named_dice_collection(name, expression):
     constant = calculate_constant(expression)
-    signed_dice_bags = build_signed_dice_bags(expression)
-    return NamedDiceCollection(name, constant, signed_dice_bags)
+    # signed_dice_bags = build_signed_dice_bags(expression)
+    d_terms = build_dice_expr_terms(expression)
+    return NamedDiceCollection(name, constant, d_terms)
