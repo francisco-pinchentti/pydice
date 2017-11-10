@@ -18,7 +18,7 @@ def main(arguments):
         for i in range(0, total_times_to_run):
             results.append(ndb.roll())
         if arguments.verbose == 1:
-            print ndb.get_print_string(arguments.expression, total_times_to_run, arguments.average)
+            print ndb.get_print_string(total_times_to_run, arguments.average)
         if arguments.verbose == 0:
             print results
         exit(0)
